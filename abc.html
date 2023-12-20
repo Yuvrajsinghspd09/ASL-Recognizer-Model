@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ASL Letter Prediction</title>
+</head>
+<body>
+  <h1>ASL Letter Prediction</h1>
+  <video id="videoElement" width="640" height="480" autoplay></video>
+  <button onclick="predict()">Predict</button>
+  <script>
+    async function startVideo() {
+      const videoElement = document.getElementById('videoElement');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        videoElement.srcObject = stream;
+      } catch (err) {
+        console.error('Error accessing webcam:', err);
+      }
+    }
+    startVideo();
+
+    async function predict() {
+      const videoElement = document.getElementById('videoElement');
+      const canvas = document.createElement('canvas');
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/jpeg'); // Convert canvas to image data
+      sendData(imageData);
+    }
+
+    async function sendData(imageData) {
+      try {
+        const response = await fetch('http://localhost:8000', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ image: imageData }),
+        });
+        const data = await response.json();
+        console.log('Predicted Letter:', data.predicted_letter);
+        // Use data.predicted_letter to display the prediction result on the webpage
+      } catch (error) {
+        console.error('Prediction failed:', error);
+      }
+    }
+  </script>
+</body>
+</html>
